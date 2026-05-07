@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ClaimCheck — Your AI-Powered Expense Audit</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg: #f5f0e8;
+    --surface: #faf7f2;
+    --border: rgba(60,45,20,0.1);
+    --text: #1e1a14;
+    --muted: rgba(30,26,20,0.45);
+    --accent: #8b6c3e;
+    --accent-dim: rgba(139,108,62,0.08);
+    --accent-light: rgba(139,108,62,0.15);
+    --success: #3a7d5a;
+    --danger: #b84040;
+    --warn: #a06b20;
+  }
+  html, body { height: 100%; background: var(--bg); color: var(--text); font-family: 'DM Sans', sans-serif; font-weight: 300; -webkit-font-smoothing: antialiased; }
+  body { display: flex; flex-direction: column; align-items: center; min-height: 100vh; padding: 0 24px; }
+
+  header { width: 100%; max-width: 720px; padding: 72px 0 52px; text-align: center; animation: fadeUp 0.8s ease both; }
+  .logo-line { font-family: 'DM Mono', monospace; font-size: 11px; letter-spacing: 0.2em; color: var(--accent); text-transform: uppercase; margin-bottom: 20px; }
+  h1 { font-family: 'DM Serif Display', serif; font-size: clamp(40px, 7vw, 64px); font-weight: 400; line-height: 1.02; letter-spacing: -0.02em; }
+  h1 em { font-style: italic; color: var(--accent); }
+  .subtitle { margin-top: 14px; font-size: 15px; color: var(--muted); font-weight: 300; }
+
+  main { width: 100%; max-width: 720px; flex: 1; animation: fadeUp 0.8s 0.12s ease both; }
+
+  .input-card { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; overflow: hidden; box-shadow: 0 1px 3px rgba(60,45,20,0.06); transition: border-color 0.2s; }
+  .input-card.drag-over { border-color: var(--accent); background: rgba(139,108,62,0.03); }
+  .card-body { padding: 24px 24px 0; }
+
+  textarea { width: 100%; min-height: 160px; background: transparent; border: none; outline: none; resize: none; font-family: 'DM Sans', sans-serif; font-size: 15px; font-weight: 300; color: var(--text); line-height: 1.75; caret-color: var(--accent); }
+  textarea::placeholder { color: rgba(30,26,20,0.25); }
+
+  .file-pill { display: none; align-items: center; gap: 8px; margin: 12px 24px 0; padding: 8px 12px; background: var(--accent-dim); border: 1px solid var(--accent-light); border-radius: 8px; font-size: 13px; color: var(--accent); }
+  .file-pill.show { display: flex; }
+  .file-pill button { margin-left: auto; background: none; border: none; color: var(--accent); cursor: pointer; font-size: 16px; line-height: 1; opacity: 0.6; padding: 0 2px; }
+  .file-pill button:hover { opacity: 1; }
+
+  .drop-hint { display: flex; align-items: center; gap: 10px; padding: 14px 24px; border-top: 1px solid var(--border); margin-top: 16px; }
+  .drop-hint svg { flex-shrink: 0; opacity: 0.3; color: var(--accent); }
+  .drop-hint-text { font-size: 13px; color: var(--muted); flex: 1; }
+  .drop-hint-text span { color: var(--accent); cursor: pointer; text-decoration: underline; text-decoration-color: rgba(139,108,62,0.3); text-underline-offset: 2px; }
+  #file-input { display: none; }
+
+  .submit-bar { display: flex; align-items: center; padding: 14px 24px; gap: 12px; border-top: 1px solid var(--border); }
+  .token-note { font-size: 12px; color: var(--muted); flex: 1; font-family: 'DM Mono', monospace; }
+  button.run { display: flex; align-items: center; gap: 8px; padding: 10px 22px; background: var(--accent); color: #faf7f2; border: none; border-radius: 8px; font-family: 'DM Sans', sans-serif; font-size: 14px; font-weight: 500; cursor: pointer; transition: opacity 0.15s, transform 0.1s; }
+  button.run:hover { opacity: 0.85; }
+  button.run:active { transform: scale(0.97); }
+  button.run:disabled { opacity: 0.4; cursor: not-allowed; }
+  .spinner { display: none; width: 16px; height: 16px; border: 2px solid rgba(250,247,242,0.25); border-top-color: #faf7f2; border-radius: 50%; animation: spin 0.7s linear infinite; }
+
+  .result { display: none; margin-top: 20px; background: var(--surface); border: 1px solid var(--border); border-radius: 16px; overflow: hidden; box-shadow: 0 1px 3px rgba(60,45,20,0.06); animation: fadeUp 0.35s ease both; }
+  .result.show { display: block; }
+  .result-header { display: flex; align-items: center; gap: 12px; padding: 16px 24px; border-bottom: 1px solid var(--border); }
+  .verdict-badge { font-family: 'DM Mono', monospace; font-size: 11px; letter-spacing: 0.1em; padding: 4px 10px; border-radius: 20px; text-transform: uppercase; }
+  .verdict-badge.approved  { background: rgba(58,125,90,0.1);  color: var(--success); border: 1px solid rgba(58,125,90,0.2); }
+  .verdict-badge.rejected  { background: rgba(184,64,64,0.1);  color: var(--danger);  border: 1px solid rgba(184,64,64,0.2); }
+  .verdict-badge.conditions{ background: rgba(160,107,32,0.1); color: var(--warn);    border: 1px solid rgba(160,107,32,0.2); }
+  .result-time { margin-left: auto; font-family: 'DM Mono', monospace; font-size: 11px; color: var(--muted); }
+  .result-body { padding: 24px; font-size: 13.5px; line-height: 1.85; color: rgba(30,26,20,0.72); white-space: pre-wrap; font-family: 'DM Mono', monospace; }
+
+  footer { width: 100%; max-width: 720px; padding: 28px 0 40px; display: flex; align-items: center; justify-content: space-between; border-top: 1px solid var(--border); margin-top: 32px; animation: fadeUp 0.8s 0.25s ease both; }
+  .author { font-size: 13px; color: var(--muted); font-weight: 300; }
+  .author strong { color: var(--text); font-weight: 500; }
+  .stack-note { font-family: 'DM Mono', monospace; font-size: 11px; color: var(--muted); opacity: 0.55; letter-spacing: 0.04em; }
+
+  @keyframes fadeUp { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: translateY(0); } }
+  @keyframes spin { to { transform: rotate(360deg); } }
+</style>
+</head>
+<body>
+
+<header>
+  <p class="logo-line">ClaimCheck &nbsp;·&nbsp; Enterprise Edition</p>
+  <h1>Claim<em>Check</em></h1>
+  <p class="subtitle">AI-powered expense audit tool for enterprise</p>
+</header>
+
+<main>
+  <div class="input-card" id="card">
+    <div class="card-body">
+      <textarea id="input" placeholder="Describe the expense report here, or drag and drop a PDF receipt below…" rows="7"></textarea>
+    </div>
+
+    <div class="file-pill" id="file-pill">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+      <span id="file-name">receipt.pdf</span>
+      <button onclick="clearFile()" aria-label="Remove file">×</button>
+    </div>
+
+    <div class="drop-hint">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+        <polyline points="17 8 12 3 7 8"/>
+        <line x1="12" y1="3" x2="12" y2="15"/>
+      </svg>
+      <p class="drop-hint-text">
+        Drag &amp; drop a PDF receipt, or <span onclick="document.getElementById('file-input').click()">browse to upload</span>
+      </p>
+      <input type="file" id="file-input" accept=".pdf">
+    </div>
+
+    <div class="submit-bar">
+      <span class="token-note" id="token-note">—</span>
+      <button class="run" id="run-btn" onclick="submit()">
+        <svg id="run-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+        <div class="spinner" id="spinner"></div>
+        Run audit
+      </button>
+    </div>
+  </div>
+
+  <div class="result" id="result">
+    <div class="result-header">
+      <span class="verdict-badge" id="badge">—</span>
+      <span class="result-time" id="result-time"></span>
+    </div>
+    <div class="result-body" id="report"></div>
+  </div>
+</main>
+
+<footer>
+  <p class="author">Built by <strong>Lingwei Kong</strong></p>
+</footer>
+
+<script>
+let attachedFile = null;
+
+function clearFile() {
+  attachedFile = null;
+  document.getElementById('file-pill').classList.remove('show');
+  document.getElementById('file-input').value = '';
+}
+
+function updateNote() {
+  const len = document.getElementById('input').value.length;
+  document.getElementById('token-note').textContent = len > 0 ? '~' + Math.round(len/4) + ' tokens' : '—';
+}
+
+document.getElementById('input').addEventListener('input', updateNote);
+
+document.getElementById('file-input').addEventListener('change', function(e) {
+  const f = e.target.files[0];
+  if (f) { attachedFile = f; showPill(f.name); }
+});
+
+function showPill(name) {
+  document.getElementById('file-name').textContent = name;
+  document.getElementById('file-pill').classList.add('show');
+}
+
+const card = document.getElementById('card');
+card.addEventListener('dragover', function(e) { e.preventDefault(); card.classList.add('drag-over'); });
+card.addEventListener('dragleave', function() { card.classList.remove('drag-over'); });
+card.addEventListener('drop', function(e) {
+  e.preventDefault();
+  card.classList.remove('drag-over');
+  const f = e.dataTransfer.files[0];
+  if (f && f.name.endsWith('.pdf')) { attachedFile = f; showPill(f.name); }
+});
+
+async function submit() {
+  const text = document.getElementById('input').value.trim();
+  if (!text && !attachedFile) return;
+
+  const btn = document.getElementById('run-btn');
+  const icon = document.getElementById('run-icon');
+  const spin = document.getElementById('spinner');
+  btn.disabled = true;
+  icon.style.display = 'none';
+  spin.style.display = 'block';
+  document.getElementById('result').classList.remove('show');
+
+  const t0 = Date.now();
+  try {
+    let response;
+    if (attachedFile) {
+      const fd = new FormData();
+      fd.append('file', attachedFile);
+      response = await fetch('/api/agent/audit/upload', { method: 'POST', body: fd });
+    } else {
+      response = await fetch('/api/agent/audit', {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain' },
+        body: text
+      });
+    }
+    const data = await response.text();
+    const elapsed = ((Date.now() - t0) / 1000).toFixed(1);
+    document.getElementById('report').textContent = data;
+    document.getElementById('result-time').textContent = elapsed + 's';
+
+    const badge = document.getElementById('badge');
+    if (data.includes('REJECTED')) {
+      badge.textContent = 'Rejected'; badge.className = 'verdict-badge rejected';
+    } else if (data.includes('APPROVED WITH CONDITIONS')) {
+      badge.textContent = 'Conditions'; badge.className = 'verdict-badge conditions';
+    } else {
+      badge.textContent = 'Approved'; badge.className = 'verdict-badge approved';
+    }
+    document.getElementById('result').classList.add('show');
+  } catch(err) {
+    document.getElementById('report').textContent = 'Error: ' + err.message;
+    document.getElementById('result').classList.add('show');
+  } finally {
+    btn.disabled = false;
+    icon.style.display = 'block';
+    spin.style.display = 'none';
+  }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,4 @@
+POST http://localhost:8080/api/agent/audit
+Content-Type: text/plain
+
+ACCOMMODATION 750 USD per night for 2 nights at luxury resort. FLIGHT 4500 USD business class. MEAL 200 USD per day.
