@@ -1,4 +1,4 @@
 POST http://localhost:8080/api/agent/audit
-Content-Type: text/plain
+Content-Type: text/plain;charset=UTF-8
 
-ACCOMMODATION 750 USD per night for 2 nights at luxury resort. FLIGHT 4500 USD business class. MEAL 200 USD per day.
+我去武汉的火车票是100美元,可以报销吗?

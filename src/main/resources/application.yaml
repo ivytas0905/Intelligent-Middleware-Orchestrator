@@ -15,6 +15,10 @@ spring:
     multipart:
        max-file-size:10MB
        max-request-size:10MB
+    encoding:
+       charset:UTF-8
+       enabled:true
+       force:true
 
 langchain4j:
   open-ai:
@@ -32,4 +36,3 @@ imo:
      max-results: 4
      min-score: 0.5
 
-cat src/main/resources/application.yaml | grep api-key
